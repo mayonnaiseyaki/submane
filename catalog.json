@@ -10,7 +10,7 @@
      "plans":[{"name":"Individual","price":980,"cycle":"month"},{"name":"Duo","price":1280,"cycle":"month"},{"name":"Family","price":1580,"cycle":"month"}]},
     {"name":"Uber One","color":"#8A6A1E","joinUrl":"https://www.uber.com/jp/ja/u/uber-one/","cancelUrl":"https://www.uber.com/jp/ja/u/uber-one/",
      "cancelInfo":"アプリ → アカウント → Uber One → メンバーシップを管理。",
-     "plans":[{"name":"月額プラン","price":990,"cycle":"month"},{"name":"年額プラン","price":9900,"cycle":"year"}]},
+     "plans":[{"name":"月額プラン","price":1500,"cycle":"month"},{"name":"年額プラン","price":9900,"cycle":"year"}]},
     {"name":"Amazon Prime","color":"#1A8FB8","joinUrl":"https://www.amazon.co.jp/amazonprime","cancelUrl":"https://www.amazon.co.jp/mc/pipelines/cancel",
      "cancelInfo":"アカウントサービス → プライム会員情報 → 会員資格を終了する。",
      "plans":[{"name":"月間プラン","price":600,"cycle":"month"},{"name":"年間プラン","price":5900,"cycle":"year"}]},
@@ -19,6 +19,6 @@
      "plans":[{"name":"月額プラン","price":2189,"cycle":"month"}]},
     {"name":"YouTube Premium","color":"#D93025","joinUrl":"https://www.youtube.com/premium","cancelUrl":"https://www.youtube.com/paid_memberships",
      "cancelInfo":"YouTube → 購入とメンバーシップ → メンバーシップを解約。",
-     "plans":[{"name":"個人","price":2000,"cycle":"month"},{"name":"個人（年額）","price":12800,"cycle":"year"}]}
+     "plans":[{"name":"個人","price":1280,"cycle":"month"},{"name":"個人（年額）","price":12800,"cycle":"year"}]}
   ]
 }
