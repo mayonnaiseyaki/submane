@@ -19,6 +19,6 @@
      "plans":[{"name":"月額プラン","price":2189,"cycle":"month"}]},
     {"name":"YouTube Premium","color":"#D93025","joinUrl":"https://www.youtube.com/premium","cancelUrl":"https://www.youtube.com/paid_memberships",
      "cancelInfo":"YouTube → 購入とメンバーシップ → メンバーシップを解約。",
-     "plans":[{"name":"個人","price":1280,"cycle":"month"},{"name":"個人（年額）","price":12800,"cycle":"year"}]}
+     "plans":[{"name":"個人","price":2000,"cycle":"month"},{"name":"個人（年額）","price":12800,"cycle":"year"}]}
   ]
 }
