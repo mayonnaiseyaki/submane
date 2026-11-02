@@ -1,24 +1,216 @@
 {
-  "version": "2026-10-20",
-  "note": "デモ用の料金カタログ。実際の料金とは異なる場合がある",
-  "services": [
-    {"name":"Netflix","color":"#C8102E","joinUrl":"https://www.netflix.com/jp/","cancelUrl":"https://www.netflix.com/cancelplan",
-     "cancelInfo":"アカウント → メンバーシップのキャンセル。次回請求日まで視聴可能。",
-     "plans":[{"name":"広告つきスタンダード","price":890,"cycle":"month"},{"name":"スタンダード","price":1590,"cycle":"month"},{"name":"プレミアム","price":2290,"cycle":"month"}]},
-    {"name":"Spotify Premium","color":"#1E9E50","joinUrl":"https://www.spotify.com/jp/premium/","cancelUrl":"https://www.spotify.com/jp/account/subscription/",
-     "cancelInfo":"アカウント → プランを管理 → プレミアムをキャンセル。",
-     "plans":[{"name":"Individual","price":980,"cycle":"month"},{"name":"Duo","price":1280,"cycle":"month"},{"name":"Family","price":1580,"cycle":"month"}]},
-    {"name":"Uber One","color":"#8A6A1E","joinUrl":"https://www.uber.com/jp/ja/u/uber-one/","cancelUrl":"https://www.uber.com/jp/ja/u/uber-one/",
-     "cancelInfo":"アプリ → アカウント → Uber One → メンバーシップを管理。",
-     "plans":[{"name":"月額プラン","price":1500,"cycle":"month"},{"name":"年額プラン","price":9900,"cycle":"year"}]},
-    {"name":"Amazon Prime","color":"#1A8FB8","joinUrl":"https://www.amazon.co.jp/amazonprime","cancelUrl":"https://www.amazon.co.jp/mc/pipelines/cancel",
-     "cancelInfo":"アカウントサービス → プライム会員情報 → 会員資格を終了する。",
-     "plans":[{"name":"月間プラン","price":600,"cycle":"month"},{"name":"年間プラン","price":5900,"cycle":"year"}]},
-    {"name":"U-NEXT","color":"#2B3A55","joinUrl":"https://video.unext.jp/","cancelUrl":"https://video.unext.jp/",
-     "cancelInfo":"アカウント設定 → 契約・解約 → 解約手続き。解約時にパスワードの再入力が必要。",
-     "plans":[{"name":"月額プラン","price":2189,"cycle":"month"}]},
-    {"name":"YouTube Premium","color":"#D93025","joinUrl":"https://www.youtube.com/premium","cancelUrl":"https://www.youtube.com/paid_memberships",
-     "cancelInfo":"YouTube → 購入とメンバーシップ → メンバーシップを解約。",
-     "plans":[{"name":"個人","price":1280,"cycle":"month"},{"name":"個人（年額）","price":12800,"cycle":"year"}]}
-  ]
+ "version": "2026-11-02",
+ "note": "デモ用の料金カタログ。実際の料金とは異なる場合がある",
+ "services": [
+  {
+   "name": "Netflix",
+   "color": "#C8102E",
+   "joinUrl": "https://www.netflix.com/jp/",
+   "cancelUrl": "https://www.netflix.com/cancelplan",
+   "cancelInfo": "アカウント → メンバーシップのキャンセル。次回請求日まで視聴可能。",
+   "plans": [
+    {
+     "name": "広告つきスタンダード",
+     "price": 890,
+     "cycle": "month"
+    },
+    {
+     "name": "スタンダード",
+     "price": 1590,
+     "cycle": "month"
+    },
+    {
+     "name": "プレミアム",
+     "price": 2290,
+     "cycle": "month"
+    }
+   ],
+   "category": "動画配信"
+  },
+  {
+   "name": "Spotify Premium",
+   "color": "#1E9E50",
+   "joinUrl": "https://www.spotify.com/jp/premium/",
+   "cancelUrl": "https://www.spotify.com/jp/account/subscription/",
+   "cancelInfo": "アカウント → プランを管理 → プレミアムをキャンセル。",
+   "plans": [
+    {
+     "name": "Individual",
+     "price": 980,
+     "cycle": "month"
+    },
+    {
+     "name": "Duo",
+     "price": 1280,
+     "cycle": "month"
+    },
+    {
+     "name": "Family",
+     "price": 1580,
+     "cycle": "month"
+    }
+   ],
+   "category": "音楽配信"
+  },
+  {
+   "name": "Uber One",
+   "color": "#8A6A1E",
+   "joinUrl": "https://www.uber.com/jp/ja/u/uber-one/",
+   "cancelUrl": "https://www.uber.com/jp/ja/u/uber-one/",
+   "cancelInfo": "アプリ → アカウント → Uber One → メンバーシップを管理。",
+   "plans": [
+    {
+     "name": "月額プラン",
+     "price": 990,
+     "cycle": "month"
+    },
+    {
+     "name": "年額プラン",
+     "price": 9900,
+     "cycle": "year"
+    }
+   ],
+   "category": "フードデリバリー"
+  },
+  {
+   "name": "Amazon Prime",
+   "color": "#1A8FB8",
+   "joinUrl": "https://www.amazon.co.jp/amazonprime",
+   "cancelUrl": "https://www.amazon.co.jp/mc/pipelines/cancel",
+   "cancelInfo": "アカウントサービス → プライム会員情報 → 会員資格を終了する。",
+   "plans": [
+    {
+     "name": "月間プラン",
+     "price": 600,
+     "cycle": "month"
+    },
+    {
+     "name": "年間プラン",
+     "price": 5900,
+     "cycle": "year"
+    }
+   ],
+   "category": "動画配信"
+  },
+  {
+   "name": "U-NEXT",
+   "color": "#2B3A55",
+   "joinUrl": "https://video.unext.jp/",
+   "cancelUrl": "https://video.unext.jp/",
+   "cancelInfo": "アカウント設定 → 契約・解約 → 解約手続き。解約時にパスワードの再入力が必要。",
+   "plans": [
+    {
+     "name": "月額プラン",
+     "price": 2189,
+     "cycle": "month"
+    }
+   ],
+   "category": "動画配信"
+  },
+  {
+   "name": "YouTube Premium",
+   "color": "#D93025",
+   "joinUrl": "https://www.youtube.com/premium",
+   "cancelUrl": "https://www.youtube.com/paid_memberships",
+   "cancelInfo": "YouTube → 購入とメンバーシップ → メンバーシップを解約。",
+   "plans": [
+    {
+     "name": "個人",
+     "price": 1280,
+     "cycle": "month"
+    },
+    {
+     "name": "個人（年額）",
+     "price": 12800,
+     "cycle": "year"
+    }
+   ],
+   "category": "動画配信"
+  },
+  {
+   "name": "Disney+",
+   "category": "動画配信",
+   "color": "#113CCF",
+   "joinUrl": "https://www.disneyplus.com/ja-jp",
+   "cancelUrl": "https://www.disneyplus.com/ja-jp/account/subscription",
+   "cancelInfo": "アカウント → サブスクリプション → サブスクリプションを解約。",
+   "plans": [
+    {
+     "name": "スタンダード",
+     "price": 1140,
+     "cycle": "month"
+    },
+    {
+     "name": "プレミアム",
+     "price": 1520,
+     "cycle": "month"
+    }
+   ]
+  },
+  {
+   "name": "Hulu",
+   "category": "動画配信",
+   "color": "#1CA36B",
+   "joinUrl": "https://www.hulu.jp/",
+   "cancelUrl": "https://www.hulu.jp/account",
+   "cancelInfo": "アカウント → 契約内容 → 解約する。",
+   "plans": [
+    {
+     "name": "月額プラン",
+     "price": 1026,
+     "cycle": "month"
+    }
+   ]
+  },
+  {
+   "name": "Apple Music",
+   "category": "音楽配信",
+   "color": "#E5354B",
+   "joinUrl": "https://www.apple.com/jp/apple-music/",
+   "cancelUrl": "https://support.apple.com/ja-jp/118428",
+   "cancelInfo": "設定 → Apple ID → サブスクリプション → Apple Music → サブスクリプションをキャンセル。",
+   "plans": [
+    {
+     "name": "個人",
+     "price": 1080,
+     "cycle": "month"
+    },
+    {
+     "name": "学生",
+     "price": 580,
+     "cycle": "month"
+    }
+   ]
+  },
+  {
+   "name": "Amazon Music Unlimited",
+   "category": "音楽配信",
+   "color": "#25A0C5",
+   "joinUrl": "https://www.amazon.co.jp/music/unlimited",
+   "cancelUrl": "https://www.amazon.co.jp/music/settings",
+   "cancelInfo": "ミュージック設定 → Amazon Music Unlimited → 登録をキャンセル。",
+   "plans": [
+    {
+     "name": "個人（プライム会員）",
+     "price": 980,
+     "cycle": "month"
+    }
+   ]
+  },
+  {
+   "name": "Wolt+",
+   "category": "フードデリバリー",
+   "color": "#009DE0",
+   "joinUrl": "https://wolt.com/ja/jpn",
+   "cancelUrl": "https://wolt.com/ja/jpn",
+   "cancelInfo": "アプリ → プロフィール → Wolt+ → メンバーシップを解約。",
+   "plans": [
+    {
+     "name": "月額プラン",
+     "price": 498,
+     "cycle": "month"
+    }
+   ]
+  }
+ ]
 }
