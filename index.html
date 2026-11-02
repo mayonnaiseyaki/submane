@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>サブマネ</title>
+<style>body{margin:0;}</style>
+</head>
+<body>
+<style>
+  /* レイアウト: スマホ幅の1画面アプリ。ログイン → 一覧 → 詳細 の3画面を切り替える。PCでは中央に端末枠で表示 */
+  :root{
+    --bg:#F2F2F7;
+    --surface:#FFFFFF;
+    --ink:#1C1C1E;
+    --sub:#6E6E73;
+    --line:#E3E3E8;
+    --accent:#1E88F0;
+    --accent-ink:#FFFFFF;
+    --danger:#D93A3A;
+    --trial:#E08A1E;
+    --frame:#D9D9DF;
+    --desk:#E4E4EA;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#000000; --surface:#1C1C1E; --ink:#F2F2F7; --sub:#98989F;
+      --line:#2C2C2E; --accent:#3A9BFF; --accent-ink:#FFFFFF; --danger:#FF6B6B;
+      --trial:#F0A040; --frame:#2C2C2E; --desk:#141416; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#000000; --surface:#1C1C1E; --ink:#F2F2F7; --sub:#98989F;
+    --line:#2C2C2E; --accent:#3A9BFF; --accent-ink:#FFFFFF; --danger:#FF6B6B;
+    --trial:#F0A040; --frame:#2C2C2E; --desk:#141416; color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    font-size:14px; overflow-x:hidden;
+  }
+  .device{
+    max-width:400px; min-height:100%; margin:0 auto; background:var(--bg);
+    display:flex; flex-direction:column; position:relative;
+  }
+  .statusbar,.home-ind{display:none;}
+  @media (min-width:600px){
+    body{padding-block:32px; display:flex; justify-content:center; align-items:flex-start; background:var(--desk);}
+    .phone{
+      width:390px; height:844px; flex:0 0 auto; background:var(--bg);
+      border:12px solid #111; border-radius:58px; overflow:hidden; position:relative;
+      display:flex; flex-direction:column;
+      box-shadow:0 0 0 2px #3a3a3c, 0 24px 60px rgba(0,0,0,.28);
+    }
+    .statusbar{
+      display:flex; justify-content:space-between; align-items:center; height:50px; flex:0 0 auto;
+      padding-inline:30px 26px; font-size:15px; font-weight:600; position:relative;
+    }
+    .island{position:absolute; left:50%; top:11px; transform:translateX(-50%); width:120px; height:34px; background:#000; border-radius:20px;}
+    .st-icons{display:flex; gap:6px; align-items:center;}
+    .device{flex:1; min-height:0; max-width:none; width:100%; overflow-y:auto; scrollbar-width:none;}
+    .device::-webkit-scrollbar{display:none;}
+    .home-ind{display:block; flex:0 0 auto; height:26px; position:relative;}
+    .home-ind::after{content:""; position:absolute; left:50%; bottom:9px; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--ink);}
+  }
+  .screen{flex:1; display:flex; flex-direction:column; padding-inline:16px;}
+  button{font-family:inherit;}
+
+  /* ログイン */
+  .login{justify-content:flex-start; padding-top:70px;}
+  .login h1{text-align:center; font-size:30px; font-weight:700; margin:0 0 44px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-size:14px; font-weight:600; margin-bottom:7px;}
+  .input-wrap{display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding-inline:10px;}
+  .input-wrap svg{flex:0 0 auto; color:var(--sub);}
+  .input-wrap input, .field > input, .field > select{
+    flex:1; width:100%; border:none; background:transparent; color:var(--ink);
+    font-size:14px; padding-block:11px; outline:none; font-family:inherit;
+  }
+  .field > input, .field > select{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding-inline:10px;}
+  .input-wrap:focus-within, .field > input:focus, .field > select:focus{border-color:var(--accent);}
+  .btn-primary{
+    width:100%; background:var(--accent); color:var(--accent-ink); border:none;
+    border-radius:22px; padding:12px; font-size:15px; font-weight:600; cursor:pointer; margin-top:10px;
+  }
+  .login-links{margin-top:26px; display:flex; flex-direction:column; gap:8px; padding-left:12px;}
+  .login-links button{background:none; border:none; color:var(--ink); font-size:14px; text-align:left; cursor:pointer; padding:0;}
+  .login-links button::before{content:"・";}
+  .msg{font-size:12px; margin-top:10px; min-height:16px; text-align:center;}
+  .msg.err{color:var(--danger);} .msg.ok{color:var(--accent);}
+
+  /* 一覧 */
+  .navbar{display:flex; justify-content:space-between; align-items:center; padding-block:16px 6px;}
+  .navbar button{display:flex; align-items:center; gap:5px; background:none; border:none; color:var(--ink); font-size:14px; cursor:pointer; padding:6px 2px;}
+  .navbar button.current{font-weight:700;}
+  .total{text-align:center; padding-block:22px 22px;}
+  .total .label{font-size:14px; font-weight:600;}
+  .total .amount{font-size:32px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums;}
+  .section-title{display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px; margin-bottom:10px;}
+  .sort{font-size:12px; font-weight:400; color:var(--sub); background:none; border:none; cursor:pointer;}
+  .list{display:flex; flex-direction:column; gap:8px; padding-bottom:30px;}
+  .item{
+    display:flex; align-items:center; gap:10px; background:var(--surface);
+    border-radius:10px; padding:9px 10px; cursor:pointer; border:none; width:100%; text-align:left; color:var(--ink);
+  }
+  .item.cancelled{opacity:.45;}
+  .icon{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:16px; flex:0 0 auto;}
+  .icon.big{width:56px; height:56px; border-radius:12px; font-size:26px;}
+  .item-body{flex:1; min-width:0;}
+  .item-name{font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px;}
+  .item-name span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .item-sub{font-size:11px; color:var(--sub); margin-top:2px;}
+  .item-price{font-weight:600; font-variant-numeric:tabular-nums;}
+  .chev{color:var(--sub); flex:0 0 auto;}
+  .tag{font-size:10px; padding:1px 6px; border-radius:999px; color:#fff; flex:0 0 auto; font-weight:600;}
+  .search{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding-inline:10px; margin-bottom:14px; color:var(--sub);}
+  .search input{flex:1; border:none; background:transparent; color:var(--ink); font-size:14px; padding-block:9px; outline:none; font-family:inherit; min-width:0;}
+  .clock{display:inline-flex; color:var(--trial); flex:0 0 auto;}
+  .item-sub.soon{color:var(--trial); font-weight:600;}
+  .total-sub{font-size:11px; color:var(--sub); margin-top:6px;}
+  .item-price small{font-size:10px; color:var(--sub); font-weight:400; margin-left:1px;}
+  .tag.cyc{background:var(--accent);}
+  .notice{background:var(--surface); border:1px solid var(--trial); border-radius:10px; padding:10px 12px; margin-bottom:14px; display:flex; flex-direction:column; gap:8px;}
+  .notice-title{display:flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--trial);}
+  .notice-row{display:flex; align-items:center; gap:10px; font-size:12px;}
+  .notice-text{flex:1; min-width:0; line-height:1.5;}
+  .notice-btns{display:flex; gap:6px; flex:0 0 auto;}
+  .notice-foot{font-size:10px; color:var(--sub);}
+  .mini{font-size:12px; padding:5px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; font-family:inherit;}
+  .mini.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .ad{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px; background:var(--surface); position:sticky; bottom:10px; z-index:3; box-shadow:0 6px 20px rgba(0,0,0,.14);}
+  .ad-label{font-size:10px; color:var(--sub); border:1px solid var(--line); border-radius:4px; padding:1px 5px; flex:0 0 auto;}
+  .ad-body{display:flex; flex-direction:column; gap:2px; font-size:12px; color:var(--sub);}
+  .ad-body b{color:var(--ink); font-size:13px;}
+  .list{padding-bottom:14px !important;}
+  .hint{font-size:11px; color:var(--sub); margin:-8px 0 14px; line-height:1.6;}
+  .set-h{font-size:13px; color:var(--sub); margin:20px 0 8px; font-weight:600;}
+  .settings-list .r span:last-child.ok{color:var(--accent);}
+  .settings-list .r span:last-child.err{color:var(--danger);}
+  .settings-list .r{gap:12px;} .settings-list .r span:last-child{text-align:right;}
+  .x{margin-left:auto; background:none; border:none; color:var(--sub); font-size:16px; cursor:pointer; line-height:1; padding:0 2px;}
+  a.ad{text-decoration:none; color:inherit; cursor:pointer;}
+  .ad .icon{width:30px; height:30px; font-size:14px;}
+  .ad-body{flex:1; min-width:0;}
+  .ad-cta{font-size:12px; color:var(--accent); font-weight:600; flex:0 0 auto;}
+  .chk{font-size:12px; border-radius:8px; padding:8px 10px; margin-bottom:8px; line-height:1.5;}
+  .chk.err{background:color-mix(in srgb, var(--danger) 12%, transparent); color:var(--danger);}
+  .chk.warn{background:color-mix(in srgb, var(--trial) 14%, transparent); color:var(--trial);}
+  .chk.ok{background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent);}
+  .btn-primary.disabled{opacity:.4; pointer-events:none;}
+  .tag.trial{background:var(--trial);} .tag.off{background:var(--sub);}
+  .empty{text-align:center; color:var(--sub); padding:40px 0; line-height:1.8;}
+
+  /* 詳細・フォーム */
+  .topbar{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding-block:16px 10px;}
+  .topbar .back{justify-self:start; background:none; border:none; color:var(--ink); font-size:14px; cursor:pointer; display:flex; align-items:center; gap:2px; padding:4px 0;}
+  .topbar .title{font-weight:600;}
+  .topbar .right{justify-self:end; background:none; border:none; color:var(--ink); font-size:14px; cursor:pointer;}
+  .hero{display:flex; flex-direction:column; align-items:center; gap:8px; padding-block:22px 18px;}
+  .hero .name{font-weight:700;}
+  .info{background:var(--surface); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;}
+  .info-row{display:grid; grid-template-columns:auto 1fr; gap:4px 8px; font-size:13px; align-items:start;}
+  .info-row .k{display:flex; align-items:center; gap:5px; font-weight:700; width:108px;}
+  .info-row .k svg{color:var(--sub);}
+  .info-row .v::before{content:"："; }
+  .actions{display:flex; flex-direction:column; gap:8px; margin-top:16px; padding-bottom:24px;}
+  .btn-sub{background:var(--surface); border:1px solid var(--line); color:var(--accent); border-radius:10px; padding:11px; font-size:14px; font-weight:600; cursor:pointer; text-align:center; text-decoration:none;}
+  .btn-sub.danger{color:var(--danger);}
+  .confirm{background:var(--surface); border:1px solid var(--danger); border-radius:10px; padding:12px; font-size:13px;}
+  .confirm p{margin:0 0 10px;}
+  .confirm .row{display:flex; gap:8px;}
+  .confirm .row button{flex:1;}
+  .form{padding-bottom:24px;}
+  .row2{display:flex; gap:10px;} .row2 .field{flex:1; min-width:0;}
+  .settings-list{background:var(--surface); border-radius:10px; overflow:hidden;}
+  .settings-list .r{display:flex; justify-content:space-between; padding:13px 12px; border-bottom:1px solid var(--line);}
+  .settings-list .r:last-child{border-bottom:none;}
+  .settings-list .r span:last-child{color:var(--sub);}
+</style>
+
+<div class="phone">
+  <div class="statusbar">
+    <span>9:41</span><span class="island"></span>
+    <span class="st-icons">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="1.5" height="4" rx=".7" fill="currentColor" opacity=".4"/></svg>
+    </span>
+  </div>
+  <div class="device" id="app"></div>
+  <div class="home-ind"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "submane.v5";
+
+  var ICONS = {
+    mail:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+    key:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="8" r="5"/><rect x="10" y="10" width="3" height="11" transform="rotate(-45 11.5 15.5)"/></svg>',
+    home:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>',
+    plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+    gear:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>',
+    chev:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>',
+    back:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>',
+    cal:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    list:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+    yen:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 7 4 5 4-5M12 12v6M9 13h6M9 16h6"/></svg>',
+    clock:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    card:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',
+    bell:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+    gift:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18"/></svg>'
+  };
+
+  function rel(n){ var d = new Date(); d.setDate(d.getDate()+n); return iso(d); }
+  function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+  /* 通信できないとき用の既定カタログ。改定前の料金なので、改定のお知らせは通信に成功したときだけ出る */
+  var FALLBACK_CATALOG = {"version": "内蔵", "note": "デモ用の料金カタログ。実際の料金とは異なる場合がある", "services": [{"name": "Netflix", "color": "#C8102E", "joinUrl": "https://www.netflix.com/jp/", "cancelUrl": "https://www.netflix.com/cancelplan", "cancelInfo": "アカウント → メンバーシップのキャンセル。次回請求日まで視聴可能。", "plans": [{"name": "広告つきスタンダード", "price": 890, "cycle": "month"}, {"name": "スタンダード", "price": 1490, "cycle": "month"}, {"name": "プレミアム", "price": 2290, "cycle": "month"}], "category": "動画配信"}, {"name": "Spotify Premium", "color": "#1E9E50", "joinUrl": "https://www.spotify.com/jp/premium/", "cancelUrl": "https://www.spotify.com/jp/account/subscription/", "cancelInfo": "アカウント → プランを管理 → プレミアムをキャンセル。", "plans": [{"name": "Individual", "price": 980, "cycle": "month"}, {"name": "Duo", "price": 1280, "cycle": "month"}, {"name": "Family", "price": 1580, "cycle": "month"}], "category": "音楽配信"}, {"name": "Uber One", "color": "#8A6A1E", "joinUrl": "https://www.uber.com/jp/ja/u/uber-one/", "cancelUrl": "https://www.uber.com/jp/ja/u/uber-one/", "cancelInfo": "アプリ → アカウント → Uber One → メンバーシップを管理。", "plans": [{"name": "月額プラン", "price": 990, "cycle": "month"}, {"name": "年額プラン", "price": 9900, "cycle": "year"}], "category": "フードデリバリー"}, {"name": "Amazon Prime", "color": "#1A8FB8", "joinUrl": "https://www.amazon.co.jp/amazonprime", "cancelUrl": "https://www.amazon.co.jp/mc/pipelines/cancel", "cancelInfo": "アカウントサービス → プライム会員情報 → 会員資格を終了する。", "plans": [{"name": "月間プラン", "price": 600, "cycle": "month"}, {"name": "年間プラン", "price": 5900, "cycle": "year"}], "category": "動画配信"}, {"name": "U-NEXT", "color": "#2B3A55", "joinUrl": "https://video.unext.jp/", "cancelUrl": "https://video.unext.jp/", "cancelInfo": "アカウント設定 → 契約・解約 → 解約手続き。解約時にパスワードの再入力が必要。", "plans": [{"name": "月額プラン", "price": 2189, "cycle": "month"}], "category": "動画配信"}, {"name": "YouTube Premium", "color": "#D93025", "joinUrl": "https://www.youtube.com/premium", "cancelUrl": "https://www.youtube.com/paid_memberships", "cancelInfo": "YouTube → 購入とメンバーシップ → メンバーシップを解約。", "plans": [{"name": "個人", "price": 1280, "cycle": "month"}, {"name": "個人（年額）", "price": 12800, "cycle": "year"}], "category": "動画配信"}, {"name": "Disney+", "category": "動画配信", "color": "#113CCF", "joinUrl": "https://www.disneyplus.com/ja-jp", "cancelUrl": "https://www.disneyplus.com/ja-jp/account/subscription", "cancelInfo": "アカウント → サブスクリプション → サブスクリプションを解約。", "plans": [{"name": "スタンダード", "price": 1140, "cycle": "month"}, {"name": "プレミアム", "price": 1520, "cycle": "month"}]}, {"name": "Hulu", "category": "動画配信", "color": "#1CA36B", "joinUrl": "https://www.hulu.jp/", "cancelUrl": "https://www.hulu.jp/account", "cancelInfo": "アカウント → 契約内容 → 解約する。", "plans": [{"name": "月額プラン", "price": 1026, "cycle": "month"}]}, {"name": "Apple Music", "category": "音楽配信", "color": "#E5354B", "joinUrl": "https://www.apple.com/jp/apple-music/", "cancelUrl": "https://support.apple.com/ja-jp/118428", "cancelInfo": "設定 → Apple ID → サブスクリプション → Apple Music → サブスクリプションをキャンセル。", "plans": [{"name": "個人", "price": 1080, "cycle": "month"}, {"name": "学生", "price": 580, "cycle": "month"}]}, {"name": "Amazon Music Unlimited", "category": "音楽配信", "color": "#25A0C5", "joinUrl": "https://www.amazon.co.jp/music/unlimited", "cancelUrl": "https://www.amazon.co.jp/music/settings", "cancelInfo": "ミュージック設定 → Amazon Music Unlimited → 登録をキャンセル。", "plans": [{"name": "個人（プライム会員）", "price": 980, "cycle": "month"}]}, {"name": "Wolt+", "category": "フードデリバリー", "color": "#009DE0", "joinUrl": "https://wolt.com/ja/jpn", "cancelUrl": "https://wolt.com/ja/jpn", "cancelInfo": "アプリ → プロフィール → Wolt+ → メンバーシップを解約。", "plans": [{"name": "月額プラン", "price": 498, "cycle": "month"}]}]};
+
+  var SAMPLE_SUBS = [
+    {id:"a1", name:"Netflix", plan:"スタンダード", price:1490, cycle:"month", anchor:"2024-04-15", joined:"2024-04-01",
+     payment:"クレジットカード（Visa 末尾4242）", trialEnd:"", status:"契約中", cancelled:"",
+     joinUrl:"https://www.netflix.com/jp/", cancelUrl:"https://www.netflix.com/cancelplan",
+     cancelInfo:"アカウント → メンバーシップのキャンセル。次回請求日まで視聴可能。", color:"#C8102E"},
+    {id:"a2", name:"Spotify Premium", plan:"Individual", price:980, cycle:"month", anchor:"2023-11-20", joined:"2023-11-20",
+     payment:"クレジットカード（Visa 末尾4242）", trialEnd:"", status:"契約中", cancelled:"",
+     joinUrl:"https://www.spotify.com/jp/premium/", cancelUrl:"https://www.spotify.com/jp/account/subscription/",
+     cancelInfo:"アカウント → プランを管理 → プレミアムをキャンセル。", color:"#1E9E50"},
+    {id:"a3", name:"Uber One", plan:"月額プラン", price:990, cycle:"month", anchor:"2025-06-15", joined:"2025-06-15",
+     payment:"PayPay", trialEnd:"", status:"契約中", cancelled:"",
+     joinUrl:"https://www.uber.com/jp/ja/u/uber-one/", cancelUrl:"https://www.uber.com/jp/ja/u/uber-one/",
+     cancelInfo:"アプリ → アカウント → Uber One → メンバーシップを管理。", color:"#8A6A1E"},
+    {id:"a6", name:"Amazon Prime", plan:"年間プラン", price:5900, cycle:"year", anchor:"2025-11-03", joined:"2025-11-03",
+     payment:"クレジットカード（Visa 末尾4242）", trialEnd:"", status:"契約中", cancelled:"",
+     joinUrl:"https://www.amazon.co.jp/amazonprime", cancelUrl:"https://www.amazon.co.jp/mc/pipelines/cancel",
+     cancelInfo:"アカウントサービス → プライム会員情報 → 会員資格を終了する。", color:"#1A8FB8"},
+    {id:"a4", name:"U-NEXT", plan:"月額プラン", price:2189, cycle:"month", anchor:rel(2), joined:rel(-29),
+     payment:"クレジットカード（Visa 末尾4242）", trialEnd:rel(2), status:"契約中", cancelled:"",
+     joinUrl:"https://video.unext.jp/", cancelUrl:"https://video.unext.jp/",
+     cancelInfo:"アカウント設定 → 契約・解約 → 解約手続き。解約時にパスワードの再入力が必要。", color:"#2B3A55"},
+    {id:"a5", name:"Adobe Photoshop", plan:"フォトプラン", price:1180, cycle:"month", anchor:"2024-01-10", joined:"2024-01-10",
+     payment:"クレジットカード（Visa 末尾4242）", trialEnd:"", status:"解約済み", cancelled:"2026-08-10",
+     joinUrl:"https://www.adobe.com/jp/", cancelUrl:"https://account.adobe.com/plans",
+     cancelInfo:"アカウント → プランを管理 → プランを解約。年間契約の途中解約は違約金あり。", color:"#4A6070"}
+  ];
+  function cloneSamples(){ return SAMPLE_SUBS.map(function(x){ return Object.assign({}, x); }); }
+
+  function freshDb(){ return {users:[{email:"demo@example.com", password:"password"}], session:null, subs:cloneSamples(), applied:{}, revLog:[], updatedAt:0}; }
+  function migrate(d){
+    d.applied = d.applied || {}; d.revLog = d.revLog || []; d.updatedAt = d.updatedAt || 0; delete d.acks;
+    d.subs.forEach(function(s){
+      if(!s.cycle) s.cycle = "month";
+      if(!s.anchor){
+        var j = (s.joined || iso(today())).split("-");
+        s.anchor = j[0] + "-" + j[1] + "-" + String(s.billingDay || Number(j[2])).padStart(2,"0");
+      }
+    });
+    return d;
+  }
+  function load(){
+    try{ var raw = localStorage.getItem(KEY); if(raw){ var d = JSON.parse(raw); if(d && d.subs) return migrate(d); } }catch(e){}
+    return freshDb();
+  }
+
+  var db = load();
+  var catalog = {data: FALLBACK_CATALOG, source: "local"};
+  var view = {adSeed: Math.floor(Math.random()*3), q:"", name: db.session ? "list" : "login", id:null, sort:"next", loginMode:"login", confirm:false, msg:"", msgType:""};
+  var app = document.getElementById("app");
+
+  function save(){
+    db.updatedAt = Date.now();
+    try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+  }
+
+  /* ---- 通信1：料金カタログの取得 ---- */
+  var CATALOG_SOURCES = [
+    {url: "https://raw.githubusercontent.com/mayonnaiseyaki/submane/main/catalog.json", label: "GitHubから取得"},
+    {url: "./catalog.json", label: "サーバーから取得"}
+  ];
+  function loadCatalog(){
+    var i = 0;
+    (function next(){
+      if(i >= CATALOG_SOURCES.length) return; /* どこからも取れなければ内蔵の既定カタログのまま動く */
+      var src = CATALOG_SOURCES[i++];
+      fetch(src.url, {cache:"no-store"}).then(function(r){
+        if(!r.ok) throw new Error(r.status);
+        return r.json();
+      }).then(function(json){
+        if(!json || !Array.isArray(json.services)) throw new Error("bad");
+        catalog = {data: json, source: src.label, fetchedAt: Date.now()};
+        autoApply();
+        rerenderIfIdle();
+      }).catch(next);
+    })();
+  }
+
+  function rerenderIfIdle(){
+    if(view.name === "list" || view.name === "settings" || view.name === "detail") render();
+  }
+
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  function yen(n){ return "¥" + Number(n||0).toLocaleString("ja-JP"); }
+  function jpDate(s){ if(!s) return "-"; var p = s.split("-"); return Number(p[0])+"年"+Number(p[1])+"月"+Number(p[2])+"日"; }
+  function today(){ var d = new Date(); d.setHours(0,0,0,0); return d; }
+  function parse(s){ return new Date(s + "T00:00:00"); }
+  function daysTo(d){ return Math.round((d - today()) / 86400000); }
+  function md(d){ return (d.getMonth()+1)+"月"+d.getDate()+"日"; }
+
+  var CYCLES = {month:"毎月", year:"毎年", week:"毎週"};
+  var UNITS = {month:"月", year:"年", week:"週"};
+  var WEEKDAYS = ["日","月","火","水","木","金","土"];
+
+  function addCycle(d, cycle, n, anchorDay){
+    var r = new Date(d);
+    if(cycle === "week"){ r.setDate(r.getDate() + 7*n); return r; }
+    var months = cycle === "year" ? 12*n : n;
+    var y = r.getFullYear(), m = r.getMonth() + months;
+    var last = new Date(y, m + 1, 0).getDate();
+    return new Date(y, m, Math.min(anchorDay, last));
+  }
+  /* 更新基準日と請求周期から、今日以降で最初の更新日を求める */
+  function nextRenew(s){
+    var a = parse(s.anchor), t = today(), day = a.getDate();
+    if(a >= t) return a;
+    var n = 0, d = a;
+    if(s.cycle === "week"){ n = Math.ceil((t - a) / (7*86400000)); return addCycle(a, "week", n, day); }
+    var per = s.cycle === "year" ? 12 : 1;
+    n = Math.floor(((t.getFullYear() - a.getFullYear())*12 + (t.getMonth() - a.getMonth())) / per);
+    d = addCycle(a, s.cycle, n, day);
+    while(d < t){ n++; d = addCycle(a, s.cycle, n, day); }
+    return d;
+  }
+  function cycleText(s){
+    var a = parse(s.anchor);
+    if(s.cycle === "year") return "毎年" + md(a);
+    if(s.cycle === "week") return "毎週" + WEEKDAYS[a.getDay()] + "曜日";
+    return "毎月" + a.getDate() + "日";
+  }
+  function perMonth(s){
+    if(s.cycle === "year") return s.price / 12;
+    if(s.cycle === "week") return s.price * 52 / 12;
+    return Number(s.price);
+  }
+  function priceText(s){ return yen(s.price) + " / " + UNITS[s.cycle || "month"]; }
+
+  function inTrial(s){ return s.trialEnd && parse(s.trialEnd) >= today(); }
+  function find(id){ return db.subs.filter(function(s){return s.id===id;})[0]; }
+  function go(name, id){ view.name = name; view.id = id || null; view.confirm = false; view.msg = ""; render(); app.scrollTop = 0; window.scrollTo(0,0); }
+
+  /* ---- 料金改定の検出 ---- */
+  function catalogPlan(s){
+    var svc = catalog.data.services.filter(function(x){ return x.name === s.name; })[0];
+    if(!svc) return null;
+    var plan = svc.plans.filter(function(p){ return p.name === s.plan; })[0];
+    return plan ? {svc: svc, plan: plan} : null;
+  }
+  /* 通信で取得したカタログの料金を、登録中のサブスクへ自動で反映する。
+     同じ版では一度しか反映しないので、利用者が手で直した料金は次の版まで保たれる */
+  function autoApply(){
+    if(catalog.source === "local") return;
+    var v = catalog.data.version, changed = false;
+    db.subs.forEach(function(s){
+      if(s.status === "解約済み" || db.applied[s.id] === v) return;
+      var c = catalogPlan(s);
+      if(!c) return;
+      var cyc = c.plan.cycle || "month";
+      if(Number(c.plan.price) !== Number(s.price) || cyc !== s.cycle){
+        db.revLog.push({name: s.name, plan: s.plan, from: priceText(s), to: yen(c.plan.price) + " / " + UNITS[cyc], version: v});
+        s.price = Number(c.plan.price); s.cycle = cyc;
+      }
+      db.applied[s.id] = v; changed = true;
+    });
+    if(changed) save();
+  }
+
+  function render(){
+    if(view.name === "login") return renderLogin();
+    if(view.name === "list") return renderList();
+    if(view.name === "detail") return renderDetail();
+    if(view.name === "form") return renderForm();
+    if(view.name === "settings") return renderSettings();
+    if(view.name === "post") return renderPost();
+  }
+
+  function renderLogin(){
+    var signup = view.loginMode === "signup";
+    app.innerHTML =
+      '<div class="screen login">' +
+        '<h1>サブマネ</h1>' +
+        '<form id="loginForm">' +
+          '<div class="field"><label for="email">メールアドレス</label><div class="input-wrap">'+ICONS.mail+'<input id="email" type="email" placeholder="example@mail.com" autocomplete="username"></div></div>' +
+          '<div class="field"><label for="pw">パスワード</label><div class="input-wrap">'+ICONS.key+'<input id="pw" type="password" placeholder="パスワード" autocomplete="current-password"></div></div>' +
+          '<button class="btn-primary" type="submit">'+(signup ? "新規登録する" : "ログインする")+'</button>' +
+          '<div class="msg '+view.msgType+'">'+esc(view.msg)+'</div>' +
+        '</form>' +
+        '<div class="login-links">' +
+          '<button id="toggleMode">'+(signup ? "ログインはこちら" : "新規登録はこちら")+'</button>' +
+          '<button id="forgot">パスワードをお忘れの方へ</button>' +
+        '</div>' +
+        '<p style="margin-top:36px;font-size:12px;color:var(--sub);text-align:center;">デモ用アカウント demo@example.com / password</p>' +
+      '</div>';
+
+    document.getElementById("loginForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var email = document.getElementById("email").value.trim().toLowerCase();
+      var pw = document.getElementById("pw").value;
+      if(!email || !pw){ view.msg = "メールアドレスとパスワードを入力してください"; view.msgType="err"; return renderLogin(); }
+      var user = db.users.filter(function(u){return u.email===email;})[0];
+      if(signup){
+        if(user){ view.msg = "このメールアドレスは登録済みです"; view.msgType="err"; return renderLogin(); }
+        db.users.push({email:email, password:pw});
+        db.session = email; save(); return go("list");
+      }
+      if(!user || user.password !== pw){ view.msg = "メールアドレスまたはパスワードが違います"; view.msgType="err"; return renderLogin(); }
+      db.session = email; save(); go("list");
+    });
+    document.getElementById("toggleMode").addEventListener("click", function(){
+      view.loginMode = signup ? "login" : "signup"; view.msg = ""; renderLogin();
+    });
+    document.getElementById("forgot").addEventListener("click", function(){
+      view.msg = "再設定用のメールを送信しました（デモのため実際には送信されません）"; view.msgType = "ok"; renderLogin();
+    });
+  }
+
+  function navbar(current){
+    return '<div class="navbar">' +
+      '<button id="navHome" class="'+(current==="list"?"current":"")+'">'+ICONS.home+'ホーム</button>' +
+      '<button id="navAdd">'+ICONS.plus+'追加</button>' +
+      '<button id="navSet" class="'+(current==="settings"?"current":"")+'">'+ICONS.gear+'設定</button>' +
+    '</div>';
+  }
+  function bindNav(){
+    document.getElementById("navHome").addEventListener("click", function(){ go("list"); });
+    document.getElementById("navAdd").addEventListener("click", function(){ go("form"); });
+    document.getElementById("navSet").addEventListener("click", function(){ go("settings"); });
+  }
+
+
+  function deadline(s){ return inTrial(s) ? parse(s.trialEnd) : nextRenew(s); }
+  function sorted(){
+    var arr = db.subs.slice();
+    arr.sort(function(a,b){
+      var ac = a.status === "解約済み", bc = b.status === "解約済み";
+      if(ac !== bc) return ac ? 1 : -1;
+      if(view.sort === "price") return perMonth(b) - perMonth(a);
+      return deadline(a) - deadline(b);
+    });
+    return arr;
+  }
+
+  function itemHtml(s){
+    var off = s.status === "解約済み";
+    var trial = inTrial(s);
+    var tag = off ? '<span class="tag off">解約済み</span>' : (trial ? '<span class="tag trial">無料期間中</span>' : '');
+    if(!off && s.cycle !== "month") tag += '<span class="tag cyc">'+(s.cycle === "year" ? "年額" : "週額")+'</span>';
+    var sub, soon = false;
+    if(off){ sub = "解約日：" + jpDate(s.cancelled); }
+    else if(trial){
+      var te = parse(s.trialEnd), dt = daysTo(te);
+      soon = dt <= 3; sub = "無料期間終了：" + md(te) + "（あと" + dt + "日）";
+    } else {
+      var np = nextRenew(s), dn = daysTo(np);
+      soon = dn <= 3; sub = "次回更新：" + md(np) + "（" + (dn === 0 ? "今日" : "あと" + dn + "日") + "）";
+    }
+    var clock = (!off && soon) ? '<span class="clock" title="期限が近い">'+ICONS.clock+'</span>' : '';
+    return '<button class="item'+(off?" cancelled":"")+'" data-id="'+s.id+'">' +
+      '<div class="icon" style="background:'+s.color+'">'+esc(s.name.charAt(0).toUpperCase())+'</div>' +
+      '<div class="item-body"><div class="item-name"><span>'+esc(s.name)+'</span>'+clock+tag+'</div>' +
+      '<div class="item-sub'+(soon && !off ? " soon" : "")+'">'+sub+'</div></div>' +
+      '<div class="item-price">'+yen(s.price)+'<small>/'+UNITS[s.cycle]+'</small></div><span class="chev">'+ICONS.chev+'</span>' +
+    '</button>';
+  }
+
+  function fillList(){
+    var q = (view.q || "").trim().toLowerCase();
+    var items = sorted().filter(function(s){ return !q || (s.name + " " + (s.plan||"")).toLowerCase().indexOf(q) >= 0; });
+    var box = document.getElementById("list");
+    if(!db.subs.length) box.innerHTML = '<div class="empty">まだ登録がありません。<br>上の「追加」から登録できます。</div>';
+    else if(!items.length) box.innerHTML = '<div class="empty">「'+esc(view.q)+'」に一致するサブスクはありません。</div>';
+    else box.innerHTML = items.map(itemHtml).join("");
+    box.querySelectorAll(".item").forEach(function(el){ el.addEventListener("click", function(){ go("detail", el.dataset.id); }); });
+  }
+
+  function noticeHtml(){
+    if(!db.revLog.length) return "";
+    return '<div class="notice"><div class="notice-title">'+ICONS.bell+'料金改定を反映しました<button class="x" id="closeNotice" aria-label="閉じる">×</button></div>' +
+      db.revLog.map(function(r){
+        return '<div class="notice-row"><div class="notice-text"><b>'+esc(r.name)+'</b> '+esc(r.plan)+'<br>'+esc(r.from)+' → <b>'+esc(r.to)+'</b></div></div>';
+      }).join("") +
+      '<div class="notice-foot">料金カタログ '+esc(db.revLog[db.revLog.length-1].version)+' 版にもとづく</div></div>';
+  }
+
+  /* 登録中のサブスクと同じカテゴリの、まだ契約していないサービスを広告として出す */
+  function pickAd(){
+    var mine = db.subs.filter(function(s){ return s.status !== "解約済み"; });
+    var names = mine.map(function(s){ return s.name; });
+    var cands = [];
+    mine.forEach(function(s){
+      var svc = catalog.data.services.filter(function(x){ return x.name === s.name; })[0];
+      if(!svc || !svc.category) return;
+      catalog.data.services.forEach(function(o){
+        if(o.category !== svc.category || names.indexOf(o.name) >= 0) return;
+        var p = o.plans.slice().sort(function(a,b){ return perMonth({price:a.price,cycle:a.cycle||"month"}) - perMonth({price:b.price,cycle:b.cycle||"month"}); })[0];
+        var diff = Math.round(perMonth(s) - perMonth({price:p.price, cycle:p.cycle||"month"}));
+        cands.push({svc:o, plan:p, vs:s, diff:diff});
+      });
+    });
+    if(!cands.length) return null;
+    cands.sort(function(a,b){ return b.diff - a.diff; });
+    var top = cands.filter(function(c){ return c.diff > 0; });
+    var pool = top.length ? top.slice(0, 3) : cands.slice(0, 3);
+    return pool[view.adSeed % pool.length];
+  }
+  function adHtml(){
+    var ad = pickAd();
+    if(!ad) return '<div class="ad" role="complementary" aria-label="広告"><span class="ad-label">広告</span><div class="ad-body"><b>広告枠</b><span>無料プランではここに広告が表示されます</span></div></div>';
+    var sub = ad.diff > 0 ? "今の" + ad.vs.name + "より月" + yen(ad.diff) + "おトク"
+                          : ad.vs.name + "と同じ" + ad.svc.category + "サービス";
+    return '<a class="ad" role="complementary" aria-label="広告" href="'+esc(ad.svc.joinUrl)+'" target="_blank" rel="noopener sponsored">' +
+      '<span class="ad-label">広告</span>' +
+      '<div class="icon" style="background:'+esc(ad.svc.color||"#4A6070")+'">'+esc(ad.svc.name.charAt(0).toUpperCase())+'</div>' +
+      '<div class="ad-body"><b>'+esc(ad.svc.name)+'　'+esc(yen(ad.plan.price))+' / '+UNITS[ad.plan.cycle||"month"]+'〜</b><span>'+esc(sub)+'</span></div>' +
+      '<span class="ad-cta">詳しく</span></a>';
+  }
+
+  function renderList(){
+    var active = db.subs.filter(function(s){ return s.status !== "解約済み" && !inTrial(s); });
+    var total = Math.round(active.reduce(function(t,s){ return t + perMonth(s); }, 0));
+    var yearly = Math.round(active.reduce(function(t,s){ return t + perMonth(s) * 12; }, 0));
+    app.innerHTML =
+      '<div class="screen">' + navbar("list") +
+        '<div class="total"><div class="label">1か月あたりのお支払い額</div><div class="amount">'+yen(total).replace("¥","¥ ")+'</div>' +
+          '<div class="total-sub">年間 '+yen(yearly)+'・年額や週額のプランは月あたりに換算</div></div>' +
+        noticeHtml() +
+        '<div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>' +
+          '<input id="q" type="search" placeholder="サービス名で検索" value="'+esc(view.q||"")+'"></div>' +
+        '<div class="section-title"><span>▼ 登録中のサブスクリプション</span>' +
+          '<button class="sort" id="sortBtn">'+(view.sort==="next"?"期限が近い順":"金額が高い順")+' ⇅</button></div>' +
+        '<div class="list" id="list"></div>' +
+        adHtml() +
+      '</div>';
+    bindNav();
+    document.getElementById("sortBtn").addEventListener("click", function(){ view.sort = view.sort==="next" ? "price" : "next"; renderList(); });
+    document.getElementById("q").addEventListener("input", function(e){ view.q = e.target.value; fillList(); });
+    var cn = document.getElementById("closeNotice");
+    if(cn) cn.addEventListener("click", function(){ db.revLog = []; save(); renderList(); });
+    fillList();
+  }
+
+  function infoRow(icon, k, v){ return '<div class="info-row"><span class="k">'+icon+esc(k)+'</span><span class="v">'+v+'</span></div>'; }
+
+  function renderDetail(){
+    var s = find(view.id); if(!s) return go("list");
+    var off = s.status === "解約済み";
+    var np = nextRenew(s);
+    var rows =
+      infoRow(ICONS.cal, "登録日", esc(jpDate(s.joined))) +
+      infoRow(ICONS.list, "登録プラン", esc(s.plan || "-")) +
+      infoRow(ICONS.yen, "金額", esc(priceText(s)) + (s.cycle !== "month" ? "<br>月あたり " + esc(yen(Math.round(perMonth(s)))) : "")) +
+      infoRow(ICONS.clock, "請求周期", esc(CYCLES[s.cycle])) +
+      infoRow(ICONS.clock, "引き落とし日", off ? "-" : esc(cycleText(s))) +
+      (off ? "" : infoRow(ICONS.cal, "次回更新日", esc(md(np)) + "（あと" + daysTo(np) + "日）")) +
+      infoRow(ICONS.card, "支払方法", esc(s.payment || "-")) +
+      (s.trialEnd ? infoRow(ICONS.gift, "無料期間終了", esc(jpDate(s.trialEnd))) : "") +
+      (off ? infoRow(ICONS.cal, "解約日", esc(jpDate(s.cancelled))) : "");
+
+    var actions;
+    if(off){
+      actions = '<button class="btn-sub" id="restore">契約中に戻す</button>';
+    } else if(view.confirm){
+      actions = '<div class="confirm"><p><b>解約の手順</b><br>'+esc(s.cancelInfo || "サービスのサイトで解約手続きを行ってください。")+'</p>' +
+        (s.cancelUrl ? '<a class="btn-sub danger" style="display:block;margin-bottom:8px;" href="'+esc(s.cancelUrl)+'" target="_blank" rel="noopener">退会ページを開く</a>' : '') +
+        '<div class="row"><button class="btn-sub" id="cancelNo">戻る</button><button class="btn-sub danger" id="cancelYes">解約済みにする</button></div></div>';
+    } else {
+      actions = (s.joinUrl ? '<a class="btn-sub" href="'+esc(s.joinUrl)+'" target="_blank" rel="noopener">サービスのサイトを開く</a>' : '') +
+        '<button class="btn-sub danger" id="cancelStart">解約する</button>';
+    actions += '<button class="btn-sub" id="postBtn">この解約情報を投稿する</button>';
+    }
+
+    app.innerHTML =
+      '<div class="screen">' +
+        '<div class="topbar"><button class="back" id="back">'+ICONS.back+'戻る</button><span class="title">詳細情報</span><button class="right" id="edit">[編集]</button></div>' +
+        '<div class="hero"><div class="icon big" style="background:'+s.color+'">'+esc(s.name.charAt(0).toUpperCase())+'</div><div class="name">'+esc(s.name)+'</div></div>' +
+        '<div class="info">'+rows+'</div>' +
+        '<div class="actions">'+actions+'</div>' +
+      '</div>';
+
+    document.getElementById("back").addEventListener("click", function(){ go("list"); });
+    document.getElementById("edit").addEventListener("click", function(){ go("form", s.id); });
+    var b;
+    if((b = document.getElementById("postBtn"))) b.addEventListener("click", function(){ go("post", s.id); });
+    if((b = document.getElementById("cancelStart"))) b.addEventListener("click", function(){ view.confirm = true; renderDetail(); });
+    if((b = document.getElementById("cancelNo"))) b.addEventListener("click", function(){ view.confirm = false; renderDetail(); });
+    if((b = document.getElementById("cancelYes"))) b.addEventListener("click", function(){
+      s.status = "解約済み"; s.cancelled = iso(today()); save(); view.confirm = false; renderDetail();
+    });
+    if((b = document.getElementById("restore"))) b.addEventListener("click", function(){ s.status = "契約中"; s.cancelled = ""; save(); renderDetail(); });
+  }
+
+  function renderForm(){
+    var editing = view.id ? find(view.id) : null;
+    var s = editing || {name:"", plan:"", price:"", cycle:"month", anchor:iso(today()), joined:iso(today()), payment:"クレジットカード", trialEnd:"", joinUrl:"", cancelUrl:"", cancelInfo:""};
+    var svcOpts = '<option value="">カタログから選ぶ（任意）</option>' + catalog.data.services.map(function(x, i){
+      return '<option value="'+i+'"'+(x.name === s.name ? " selected" : "")+'>'+esc(x.name)+'</option>';
+    }).join("");
+    var cycOpts = ["month","year","week"].map(function(k){ return '<option value="'+k+'"'+(s.cycle===k?" selected":"")+'>'+CYCLES[k]+'</option>'; }).join("");
+
+    app.innerHTML =
+      '<div class="screen">' +
+        '<div class="topbar"><button class="back" id="back">'+ICONS.back+'戻る</button><span class="title">'+(editing?"編集":"サブスク追加")+'</span><span></span></div>' +
+        '<form class="form" id="subForm">' +
+          '<div class="field"><label for="f_cat">サービス</label><select id="f_cat">'+svcOpts+'</select></div>' +
+          '<div class="field" id="planPick" hidden><label for="f_catplan">プラン</label><select id="f_catplan"></select></div>' +
+          '<div class="field"><label for="f_name">サービス名</label><input id="f_name" value="'+esc(s.name)+'" placeholder="例: Netflix" required></div>' +
+          '<div class="row2"><div class="field"><label for="f_plan">プラン名</label><input id="f_plan" value="'+esc(s.plan)+'" placeholder="例: スタンダード"></div>' +
+          '<div class="field"><label for="f_price">料金（円）</label><input id="f_price" type="number" min="0" value="'+esc(s.price)+'" required></div></div>' +
+          '<div class="row2"><div class="field"><label for="f_cycle">請求周期</label><select id="f_cycle">'+cycOpts+'</select></div>' +
+          '<div class="field"><label for="f_anchor">更新基準日</label><input id="f_anchor" type="date" value="'+esc(s.anchor)+'"></div></div>' +
+          '<p class="hint" id="cycHint"></p>' +
+          '<div class="row2"><div class="field"><label for="f_joined">登録日</label><input id="f_joined" type="date" value="'+esc(s.joined)+'"></div>' +
+          '<div class="field"><label for="f_trial">無料期間の終了日</label><input id="f_trial" type="date" value="'+esc(s.trialEnd)+'"></div></div>' +
+          '<div class="field"><label for="f_pay">支払方法</label><input id="f_pay" value="'+esc(s.payment)+'"></div>' +
+          '<div class="field"><label for="f_join">入会ページURL</label><input id="f_join" type="url" value="'+esc(s.joinUrl)+'" placeholder="https://"></div>' +
+          '<div class="field"><label for="f_cancel">退会ページURL</label><input id="f_cancel" type="url" value="'+esc(s.cancelUrl)+'" placeholder="https://"></div>' +
+          '<div class="field"><label for="f_info">解約方法のメモ</label><input id="f_info" value="'+esc(s.cancelInfo)+'" placeholder="例: アカウント設定から解約"></div>' +
+          '<button class="btn-primary" type="submit">保存する</button>' +
+          (editing ? '<button class="btn-sub danger" type="button" id="del" style="width:100%;margin-top:10px;">このサブスクを削除</button>' : '') +
+        '</form>' +
+      '</div>';
+
+    var $ = function(id){ return document.getElementById(id); };
+    var chosenColor = editing ? editing.color : null;
+
+    function updateHint(){
+      var tmp = {cycle: $("f_cycle").value, anchor: $("f_anchor").value || iso(today())};
+      var np = nextRenew(tmp);
+      $("cycHint").textContent = "引き落とし日は" + cycleText(tmp) + "、次回更新日は" + md(np) + "になります";
+    }
+    function fillPlans(){
+      var i = $("f_cat").value;
+      if(i === ""){ $("planPick").hidden = true; return; }
+      var svc = catalog.data.services[Number(i)];
+      $("planPick").hidden = false;
+      $("f_catplan").innerHTML = svc.plans.map(function(p, j){
+        return '<option value="'+j+'"'+(p.name === $("f_plan").value ? " selected" : "")+'>'+esc(p.name)+'　'+esc(yen(p.price))+' / '+UNITS[p.cycle||"month"]+'</option>';
+      }).join("");
+    }
+    function applyCatalog(){
+      var i = $("f_cat").value; if(i === "") return;
+      var svc = catalog.data.services[Number(i)], p = svc.plans[Number($("f_catplan").value) || 0];
+      $("f_name").value = svc.name; $("f_plan").value = p.name; $("f_price").value = p.price;
+      $("f_cycle").value = p.cycle || "month";
+      $("f_join").value = svc.joinUrl || ""; $("f_cancel").value = svc.cancelUrl || ""; $("f_info").value = svc.cancelInfo || "";
+      chosenColor = svc.color || chosenColor;
+      updateHint();
+    }
+    fillPlans(); updateHint();
+    $("f_cat").addEventListener("change", function(){ fillPlans(); applyCatalog(); });
+    $("f_catplan").addEventListener("change", applyCatalog);
+    $("f_cycle").addEventListener("change", updateHint);
+    $("f_anchor").addEventListener("change", updateHint);
+
+    $("back").addEventListener("click", function(){ editing ? go("detail", editing.id) : go("list"); });
+    $("subForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var d = {
+        name: $("f_name").value.trim(),
+        plan: $("f_plan").value.trim(),
+        price: Number($("f_price").value) || 0,
+        cycle: $("f_cycle").value,
+        anchor: $("f_anchor").value || iso(today()),
+        joined: $("f_joined").value,
+        payment: $("f_pay").value.trim(),
+        trialEnd: $("f_trial").value,
+        joinUrl: $("f_join").value.trim(),
+        cancelUrl: $("f_cancel").value.trim(),
+        cancelInfo: $("f_info").value.trim()
+      };
+      if(!d.name) return;
+      if(editing){ Object.assign(editing, d); if(chosenColor) editing.color = chosenColor; save(); go("detail", editing.id); }
+      else {
+        var colors = ["#1E88F0","#7A4FD1","#D9572B","#178A7A","#B8336A","#4A6070"];
+        d.id = "u" + Date.now(); d.status = "契約中"; d.cancelled = ""; d.color = chosenColor || colors[db.subs.length % colors.length];
+        db.subs.push(d); save(); go("list");
+      }
+    });
+    var del = $("del");
+    if(del) del.addEventListener("click", function(){
+      if(del.dataset.armed){ db.subs = db.subs.filter(function(x){return x.id!==editing.id;}); save(); go("list"); }
+      else { del.dataset.armed = "1"; del.textContent = "もう一度押すと削除します"; }
+    });
+  }
+
+
+  /* ---- 解約情報の投稿：GitHubのIssueとして送り、運営が確認してからカタログに反映する ---- */
+  var REPO = "https://github.com/mayonnaiseyaki/submane";
+  function baseHost(u){
+    try{
+      var h = new URL(u).hostname.replace(/^www\./, "").split(".");
+      var n = /\.(co|ne|or|ac|go)\.jp$/.test("." + h.slice(-2).join(".")) ? 3 : 2;
+      return h.slice(-n).join(".");
+    }catch(e){ return ""; }
+  }
+  function checkPost(d){
+    var errs = [], warns = [];
+    if(!d.name) errs.push("サービス名を入力してください");
+    if(!d.cancelUrl && !d.cancelInfo) errs.push("退会ページURLか解約方法のどちらかを入力してください");
+    [["入会ページURL", d.joinUrl], ["退会ページURL", d.cancelUrl]].forEach(function(f){
+      if(!f[1]) return;
+      var ok = false; try{ ok = new URL(f[1]).protocol === "https:"; }catch(e){}
+      if(!ok) errs.push(f[0] + "は https:// から始まる正しいURLにしてください");
+    });
+    var svc = catalog.data.services.filter(function(x){ return x.name === d.name; })[0];
+    if(svc){
+      var official = baseHost(svc.joinUrl);
+      [["入会ページURL", d.joinUrl], ["退会ページURL", d.cancelUrl]].forEach(function(f){
+        if(f[1] && official && baseHost(f[1]) && baseHost(f[1]) !== official)
+          warns.push(f[0] + "のドメインが公式サイトの " + official + " と違います。公式のページか確認してください");
+      });
+      var same = svc.cancelUrl === d.cancelUrl && (svc.cancelInfo || "") === d.cancelInfo &&
+                 svc.plans.some(function(p){ return p.name === d.plan && Number(p.price) === Number(d.price); });
+      if(same) warns.push("料金カタログの内容と同じです。変更がなければ投稿は不要です");
+    } else {
+      warns.push("料金カタログにないサービスです。新規追加の投稿として扱われます");
+    }
+    return {errs: errs, warns: warns};
+  }
+  function postBody(d){
+    return [
+      "## 解約情報の投稿",
+      "- サービス名: " + d.name,
+      "- プラン名: " + (d.plan || "-"),
+      "- 料金: " + (d.price ? d.price + "円 / " + UNITS[d.cycle] : "-"),
+      "- 入会ページURL: " + (d.joinUrl || "-"),
+      "- 退会ページURL: " + (d.cancelUrl || "-"),
+      "- 解約方法: " + (d.cancelInfo || "-"),
+      "- 補足: " + (d.note || "-"),
+      "",
+      "## 運営の確認項目",
+      "- [ ] URLが公式サイトのページである",
+      "- [ ] 料金・プラン名が公式サイトと一致している",
+      "- [ ] 解約方法の手順が現在の画面と一致している",
+      "- [ ] catalog.json に反映し、version を更新した",
+      "",
+      "サブマネのアプリから投稿 / 対象カタログ " + catalog.data.version + " 版"
+    ].join("\n");
+  }
+  function renderPost(){
+    var s = find(view.id); if(!s) return go("list");
+    app.innerHTML =
+      '<div class="screen">' +
+        '<div class="topbar"><button class="back" id="back">'+ICONS.back+'戻る</button><span class="title">解約情報の投稿</span><span></span></div>' +
+        '<p class="hint" style="margin:0 0 14px;">入力した内容を運営に送ります。運営が公式サイトと照らし合わせて確認したあと、料金カタログに反映され、すべての利用者に配信されます。</p>' +
+        '<form class="form" id="postForm">' +
+          '<div class="field"><label for="p_name">サービス名</label><input id="p_name" value="'+esc(s.name)+'"></div>' +
+          '<div class="row2"><div class="field"><label for="p_plan">プラン名</label><input id="p_plan" value="'+esc(s.plan)+'"></div>' +
+          '<div class="field"><label for="p_price">料金（円）</label><input id="p_price" type="number" min="0" value="'+esc(s.price)+'"></div></div>' +
+          '<div class="field"><label for="p_cycle">請求周期</label><select id="p_cycle">'+["month","year","week"].map(function(k){ return '<option value="'+k+'"'+(s.cycle===k?" selected":"")+'>'+CYCLES[k]+'</option>'; }).join("")+'</select></div>' +
+          '<div class="field"><label for="p_join">入会ページURL</label><input id="p_join" type="url" value="'+esc(s.joinUrl)+'"></div>' +
+          '<div class="field"><label for="p_cancel">退会ページURL</label><input id="p_cancel" type="url" value="'+esc(s.cancelUrl)+'"></div>' +
+          '<div class="field"><label for="p_info">解約方法</label><input id="p_info" value="'+esc(s.cancelInfo)+'"></div>' +
+          '<div class="field"><label for="p_note">補足</label><input id="p_note" placeholder="例: 退会ページの場所が変わっていた"></div>' +
+          '<div id="checkBox"></div>' +
+          '<a class="btn-primary" id="sendBtn" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;">GitHubで投稿する</a>' +
+          '<button class="btn-sub" type="button" id="copyBtn" style="width:100%;margin-top:8px;">投稿内容をコピー</button>' +
+          '<p class="hint" style="margin-top:10px;">投稿にはGitHubのアカウントが必要です。投稿の確認状況はGitHubのIssueで見られます。</p>' +
+        '</form>' +
+      '</div>';
+    var $ = function(id){ return document.getElementById(id); };
+    function read(){
+      return {name:$("p_name").value.trim(), plan:$("p_plan").value.trim(), price:Number($("p_price").value)||0, cycle:$("p_cycle").value,
+              joinUrl:$("p_join").value.trim(), cancelUrl:$("p_cancel").value.trim(), cancelInfo:$("p_info").value.trim(), note:$("p_note").value.trim()};
+    }
+    function update(){
+      var d = read(), r = checkPost(d);
+      $("checkBox").innerHTML = r.errs.map(function(e){ return '<div class="chk err">'+esc(e)+'</div>'; }).join("") +
+                                r.warns.map(function(w){ return '<div class="chk warn">'+esc(w)+'</div>'; }).join("") +
+                                (!r.errs.length && !r.warns.length ? '<div class="chk ok">入力内容に問題はありません</div>' : "");
+      var btn = $("sendBtn");
+      if(r.errs.length){ btn.removeAttribute("href"); btn.classList.add("disabled"); btn.setAttribute("aria-disabled","true"); }
+      else {
+        btn.href = REPO + "/issues/new?title=" + encodeURIComponent("【解約情報】" + d.name + (d.plan ? " " + d.plan : "")) + "&body=" + encodeURIComponent(postBody(d));
+        btn.classList.remove("disabled"); btn.removeAttribute("aria-disabled");
+      }
+    }
+    app.querySelectorAll("#postForm input, #postForm select").forEach(function(el){ el.addEventListener("input", update); el.addEventListener("change", update); });
+    $("back").addEventListener("click", function(){ go("detail", s.id); });
+    $("postForm").addEventListener("submit", function(e){ e.preventDefault(); });
+    $("copyBtn").addEventListener("click", function(){
+      var text = postBody(read()), btn = $("copyBtn");
+      var done = function(){ btn.textContent = "コピーしました"; };
+      try{ navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); }); }catch(e){ fallbackCopy(text); done(); }
+    });
+    update();
+  }
+  function fallbackCopy(t){
+    var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){} ta.remove();
+  }
+
+  function timeText(t){ if(!t) return ""; var d = new Date(t); return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+  function renderSettings(){
+    app.innerHTML =
+      '<div class="screen">' + navbar("settings") +
+        '<h2 style="font-size:17px;margin:18px 0 12px;">設定</h2>' +
+        '<div class="settings-list">' +
+          '<div class="r"><span>ログイン中</span><span>'+esc(db.session)+'</span></div>' +
+          '<div class="r"><span>ご利用プラン</span><span>無料プラン・広告あり</span></div>' +
+          '<div class="r"><span>登録件数</span><span>'+db.subs.length+'件</span></div>' +
+        '</div>' +
+        '<h3 class="set-h">通信</h3>' +
+        '<div class="settings-list">' +
+          '<div class="r"><span>料金カタログ</span><span>'+esc(catalog.data.version)+'版・'+(catalog.source === "local" ? "端末内の既定データ" : catalog.source)+'</span></div>' +
+          '<div class="r"><span>最終取得</span><span>'+(catalog.fetchedAt ? timeText(catalog.fetchedAt) : "-")+'</span></div>' +
+        '</div>' +
+        '<p class="hint">料金カタログは運営側が各サービスの料金を管理して配信します。登録中の料金と違う場合はホームにお知らせが出ます。</p>' +
+        '<div class="actions">' +
+          '<button class="btn-sub" id="refresh">料金カタログを再取得</button>' +
+          '<button class="btn-sub" id="reset">サンプルデータに戻す</button>' +
+          '<button class="btn-sub danger" id="logout">ログアウト</button>' +
+        '</div>' +
+      '</div>';
+    bindNav();
+    document.getElementById("refresh").addEventListener("click", function(){ loadCatalog(); });
+    document.getElementById("logout").addEventListener("click", function(){ db.session = null; save(); view.loginMode = "login"; go("login"); });
+    document.getElementById("reset").addEventListener("click", function(){ db.subs = cloneSamples(); db.applied = {}; db.revLog = []; autoApply(); save(); go("list"); });
+  }
+
+  render();
+  loadCatalog();
+})();
+</script>
+
+</body>
+</html>
